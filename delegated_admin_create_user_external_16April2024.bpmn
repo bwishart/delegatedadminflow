@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?><bpmn2:definitions xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" exporter="Camunda Modeler" exporterVersion="5.0.0" id="_FXeIoKhnEeOC4LOKh_69JQ" targetNamespace="isv_customtasks" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:isv="http://ibm.com/bpmn/isv" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd"><bpmn2:process camunda:historyTimeToLive="1" id="delegated_admin_create_user" isExecutable="true" name="Delegated Admin Create User"><bpmn2:startEvent camunda:displayName="Start event" id="Event_0onayf9"><bpmn2:outgoing>Flow_0jib2g4</bpmn2:outgoing></bpmn2:startEvent><bpmn2:serviceTask camunda:class="com.ibm.security.access.workflow.camunda.customTaskListener.CustomRuleTask" id="isv_function_1706386378613_customId" name="Init Vars"><bpmn2:extensionElements><isv:inputOutput><isv:inputParameter displayName="Rule expression" id="inputData" instruction="Use functions and conditions to add or transform data" name="inputData" order="1" required="true" type="String">statements:
+# Debug add a ctx object
+#- context: &gt; 
+#    ctx := { "theme": "themeid", "__tenantid": "bwishart.ice.ibmcloud.com" }
+- context: "webhookUrl := 'https://webhook.site/a632aada-7c9e-499a-99b2-fa290a28abe6'"
+- context: "theme := has(ctx.themeId) ? ctx.themeId : ''"
+- context: "identitySourceIds := has(ctx.identity_source_ids) ? ctx.identity_source_ids : ''"
+- context: "clientId := has(ctx.client_id) ? ctx.client_id : 'aa056c2f-0bf3-43e9-bfc5-3431a87aaa4e'"
+- context: "clientSecret := 'EZq0miZdD3'"
+- context: "postUrl := has(ctx.Target) &amp;&amp; ctx.Target != '' ? ctx.Target : 'https://' + ctx.__tenantid + '/usc&amp;identity_source_ids=' + context.identity_source_ids"
+- context: "postUrl = context.postUrl.startsWith('/') ? 'https://' + ctx.__tenantid + context.postUrl : context.postUrl"
+- context: "loginUrl := 'https://' + ctx.__tenantid + '/idaas/mtfim/sps/idaas/login?runtime=true&amp;identity_source_ids=' + context.identitySourceIds"
+- context: "tokenUrl := 'https://' + ctx.__tenantid + '/oauth2/token'"
+- context: &gt;
+    token := oauth.getBearerToken(context.tokenUrl, context.clientId, context.clientSecret)
+- context: &gt;
+    debugMsg := "In Initialize Vars"
+- context: &gt;
+    debugObj := {
+        "debugMsg": context.debugMsg,
+        "token": context.token,
+        "ctx": ctx,
+        "postUrl": context.postUrl,
+        "loginUrl": context.loginUrl,
+        "theme": context.theme
+    }
+#- context: &gt;
+#    webhookRtn := hc.Post(context.webhookUrl, {"content-type": "application/json"}, jsonToString(context.debugObj))
+- return: &gt;
+   {
+       "postUrl": context.postUrl,
+       "token": context.token,
+       "loginUrl": context.loginUrl,
+       "debugMsg": context.debugMsg,
+       "webhookUrl": context.webhookUrl,
+       "debugObj": context.debugObj
+   }</isv:inputParameter><isv:outputParameter displayName="Script output" id="result" instruction="The response after executing the rule expression" name="result" order="2" type="String"/></isv:inputOutput></bpmn2:extensionElements><bpmn2:incoming>Flow_0jib2g4</bpmn2:incoming><bpmn2:outgoing>Flow_1cou42b</bpmn2:outgoing></bpmn2:serviceTask><bpmn2:sequenceFlow id="Flow_0jib2g4" sourceRef="Event_0onayf9" targetRef="isv_function_1706386378613_customId"/><bpmn2:endEvent camunda:displayName="End event" id="Event_0nxpekq_customId"><bpmn2:incoming>Flow_121dejc</bpmn2:incoming></bpmn2:endEvent><bpmn2:sequenceFlow id="Flow_1cou42b" sourceRef="isv_function_1706386378613_customId" targetRef="isv_redirect_1706390898330_customId"/><bpmn2:serviceTask camunda:class="com.ibm.security.access.workflow.camunda.customTaskListener.RedirectTask" id="isv_redirect_1706390898330_customId" name="RedirectToLogin"><bpmn2:extensionElements><isv:inputOutput><isv:inputParameter displayName="URL" id="redirectUrl" instruction="The URL to redirect to." name="redirectUrl" order="2" required="true" type="String">${S(workflow_context).prop("loginUrl").stringValue()}&amp;Target=WORKFLOW_CALLBACK_URL</isv:inputParameter><isv:inputParameter displayName="Signal(optional)" id="signal" instruction="Signal can be used to resume the task in an existing flow. To return to the existing flow after execution of the task, specify a signal value and ensure that a message event is configured after the task, with the same Signal value." name="signal" order="3" type="String">onLogin</isv:inputParameter></isv:inputOutput></bpmn2:extensionElements><bpmn2:incoming>Flow_1cou42b</bpmn2:incoming><bpmn2:outgoing>Flow_1f40ql7</bpmn2:outgoing></bpmn2:serviceTask><bpmn2:serviceTask camunda:class="com.ibm.security.access.workflow.camunda.customTaskListener.RedirectTask" id="isv_redirect_1706391132486_customId" name="RedirectToPostUrl"><bpmn2:extensionElements><isv:inputOutput><isv:inputParameter displayName="URL" id="redirectUrl" instruction="The URL to redirect to." name="redirectUrl" order="2" required="true" type="String">${S(workflow_context).prop("postUrl").stringValue()}</isv:inputParameter><isv:inputParameter displayName="Signal(optional)" id="signal" instruction="Signal can be used to resume the task in an existing flow. To return to the existing flow after execution of the task, specify a signal value and ensure that a message event is configured after the task, with the same Signal value." name="signal" order="3" type="String"/></isv:inputOutput></bpmn2:extensionElements><bpmn2:incoming>Flow_1pqhf47</bpmn2:incoming><bpmn2:outgoing>Flow_121dejc</bpmn2:outgoing></bpmn2:serviceTask><bpmn2:intermediateCatchEvent id="Event_13603w1_customId" name="onLogin"><bpmn2:incoming>Flow_1f40ql7</bpmn2:incoming><bpmn2:outgoing>Flow_1mod6rw</bpmn2:outgoing><bpmn2:messageEventDefinition id="MessageEventDefinition_0yl65lc" messageRef="Message_0k721yy"/></bpmn2:intermediateCatchEvent><bpmn2:sequenceFlow id="Flow_1f40ql7" sourceRef="isv_redirect_1706390898330_customId" targetRef="Event_13603w1_customId"/><bpmn2:sequenceFlow id="Flow_1mod6rw" sourceRef="Event_13603w1_customId" targetRef="isv_function_1706457381807_customId"/><bpmn2:serviceTask camunda:class="com.ibm.security.access.workflow.camunda.customTaskListener.CustomRuleTask" id="isv_function_1706457381807_customId" name="GetUsername"><bpmn2:extensionElements><isv:inputOutput><isv:inputParameter displayName="Rule expression" id="inputData" instruction="Use functions and conditions to add or transform data" name="inputData" order="1" required="true" type="String">statements:
+- context: &gt;
+    debugObj2 := {
+      "postUrl": ctx.postUrl,
+      "token": ctx.token,
+      "loginUrl": ctx.loginUrl,
+      "debugMsg": "In DumpContext",
+      "idsuser": jsonToString(idsuser),
+      "uid": idsuser.getValue('uid'),
+      "preferredUsername": idsuser.getValue('preferred_username'),
+      "authenticationTypes": idsuser.getValue('authenticationTypes'),
+      "webhookUrl": ctx.webhookUrl
+    }
+#- context: &gt;
+#    webhookRtn := hc.Post(ctx.webhookUrl, {"content-type": "application/json"}, jsonToString(context.debugObj2))
+- return: &gt; 
+    {
+        "debugObj2": context.debugObj2,
+        "username": idsuser.getValue('preferred_username')
+    }  </isv:inputParameter><isv:outputParameter displayName="Script output" id="result" instruction="The response after executing the rule expression" name="result" order="2" type="String"/></isv:inputOutput></bpmn2:extensionElements><bpmn2:incoming>Flow_1mod6rw</bpmn2:incoming><bpmn2:outgoing>Flow_1we51kg</bpmn2:outgoing></bpmn2:serviceTask><bpmn2:serviceTask camunda:class="com.ibm.security.access.workflow.camunda.customTaskListener.FetchUserTask" id="isv_fetch_user_1706460251337_customId" name="Fetch user"><bpmn2:extensionElements><isv:inputOutput><isv:inputParameter displayName="User name" id="userid" instruction="Name of the user to search on" name="userid" order="1" required="true" type="String">${S(workflow_context).prop("username").stringValue()}</isv:inputParameter><isv:outputParameter displayName="User details" id="user" instruction="The details of the user corresponding to the userid that is received" name="user" order="2" type="json"/></isv:inputOutput></bpmn2:extensionElements><bpmn2:incoming>Flow_1we51kg</bpmn2:incoming><bpmn2:outgoing>Flow_1eq7195</bpmn2:outgoing></bpmn2:serviceTask><bpmn2:sequenceFlow id="Flow_1we51kg" sourceRef="isv_function_1706457381807_customId" targetRef="isv_fetch_user_1706460251337_customId"/><bpmn2:serviceTask camunda:class="com.ibm.security.access.workflow.camunda.customTaskListener.CustomRuleTask" id="isv_function_1706460469707_customId" name="DumpContext2"><bpmn2:extensionElements><isv:inputOutput><isv:inputParameter displayName="Rule expression" id="inputData" instruction="Use functions and conditions to add or transform data" name="inputData" order="1" required="true" type="String">statements:
+- context: &gt;
+    debugObj3 := {
+      "ctx": jsonToString(ctx),
+      "email": ctx.email,
+      "fname": ctx.fname,
+      "lname": ctx.lname,
+      "postUrl": ctx.postUrl,
+      "token": ctx.token,
+      "loginUrl": ctx.loginUrl,
+      "debugMsg": "In DumpContext",
+      "idsuser": jsonToString(idsuser),
+      "uid": idsuser.getValue('uid'),
+      "preferredUsername": idsuser.getValue('preferred_username'),
+      "authenticationTypes": idsuser.getValue('authenticationTypes'),
+      "webhookUrl": ctx.webhookUrl,
+      "user": jsonToString(user)
+    }
+#- context: &gt;
+#    webhookRtn := hc.Post(ctx.webhookUrl, {"content-type": "application/json"}, jsonToString(context.debugObj3))
+- return: &gt; 
+    {
+        "debugObj3": context.debugObj3
+    }  </isv:inputParameter><isv:outputParameter displayName="Script output" id="result" instruction="The response after executing the rule expression" name="result" order="2" type="String"/></isv:inputOutput></bpmn2:extensionElements><bpmn2:incoming>Flow_0v4ovfv</bpmn2:incoming><bpmn2:outgoing>Flow_1pborjd</bpmn2:outgoing></bpmn2:serviceTask><bpmn2:intermediateCatchEvent id="Event_1355pfc_customId" name="onUserInfo"><bpmn2:incoming>Flow_0qrlqzn</bpmn2:incoming><bpmn2:outgoing>Flow_0v4ovfv</bpmn2:outgoing><bpmn2:messageEventDefinition id="MessageEventDefinition_0bsr8u0" messageRef="Message_1cg7hcf"/></bpmn2:intermediateCatchEvent><bpmn2:sequenceFlow id="Flow_0v4ovfv" sourceRef="Event_1355pfc_customId" targetRef="isv_function_1706460469707_customId"/><bpmn2:serviceTask camunda:class="com.ibm.security.access.workflow.camunda.customTaskListener.RenderHTMLTask" id="isv_page_1713192545045_customId" name="Get User Info"><bpmn2:extensionElements><isv:inputOutput><isv:inputParameter attrDisplayText="themeRegistrations.name" attrId="themeRegistrations.id" defaultValue="default" displayName="Theme" endpoint="/v1.0/branding/themes" id="themeId" inputType="SingleSelect" instruction="Name of the theme to render" method="GET" name="themeId" order="1" placeholder="Select a theme" required="true" type="String">0b81b269-fcf9-42d3-bc0c-9b203f5971a6</isv:inputParameter><isv:inputParameter attrDisplayText="templateList.name" attrId="templateList.name" defaultValue="custom_page1" displayName="Template name" endpoint="/bpm-mgmt/v1.0/customtask/util/templateList" id="templatename" inputType="SingleSelect" instruction="Name of the template to render" method="GET" name="templateName" order="2" placeholder="Select a template" required="true" type="String">custom_page1</isv:inputParameter><isv:inputParameter displayName="Requires callback" id="callback" inputType="Checkbox" instruction="Requires callback can be used to auto generate a Message node post this specific task." name="callback" order="3" type="String"/><isv:inputParameter displayName="Signal(optional)" id="signal" instruction="Signal can be used to resume the task in an existing flow. To return to the existing flow after execution of the task, specify a signal value and ensure that a message event is configured after the task, with the same Signal value." name="signal" order="4" type="String">onUserInfo</isv:inputParameter></isv:inputOutput></bpmn2:extensionElements><bpmn2:incoming>Flow_1eq7195</bpmn2:incoming><bpmn2:outgoing>Flow_0qrlqzn</bpmn2:outgoing></bpmn2:serviceTask><bpmn2:sequenceFlow id="Flow_1eq7195" sourceRef="isv_fetch_user_1706460251337_customId" targetRef="isv_page_1713192545045_customId"/><bpmn2:sequenceFlow id="Flow_0qrlqzn" sourceRef="isv_page_1713192545045_customId" targetRef="Event_1355pfc_customId"/><bpmn2:sequenceFlow id="Flow_121dejc" sourceRef="isv_redirect_1706391132486_customId" targetRef="Event_0nxpekq_customId"/><bpmn2:serviceTask camunda:class="com.ibm.security.access.workflow.camunda.customTaskListener.CustomRuleTask" id="isv_function_1713193159929_customId" name="Create User"><bpmn2:extensionElements><isv:inputOutput><isv:inputParameter displayName="Rule expression" id="inputData" instruction="Use functions and conditions to add or transform data" name="inputData" order="1" required="true" type="String">statements:
+#- context: &gt;-
+#   ctx:= {"email": "jeff.smith002@yopmail.com", "fname": "Jeff", "lname": "Smith002", "token": "DWcESf-lXGqvYDJPgiHzeOIDB25tbn4VpiYHI3kkaag.eYXGvaxy-UK_Dz9Ka9pfH-i90iGBeUxKg2bDYJRc0u_8Ezp3wPQwSvJrbaCxc32POcRAPsaUmh3jjBxvuqx5HQ.M18xNzEzMTkzOTUyXzI1"  }
+- context: &gt;-
+   payload := jsonToString({
+       "schemas": [
+           "urn:ietf:params:scim:schemas:core:2.0:User",
+           "urn:ietf:params:scim:schemas:extension:ibm:2.0:User",
+           "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User"
+           ],
+        "userName": ctx.email,
+        "name": {
+            "familyName": ctx.lname,
+            "givenName": ctx.fname,
+            "formatted": ctx.fname + " " + ctx.lname
+        },
+        "displayName": ctx.fname + " " + ctx.lname,
+        "preferredLanguage": "en-US",
+        "active": true,
+        "emails": [
+            {
+                "value": ctx.email,
+                "type": "work"
+            }
+        ],
+        "addresses": [
+            {
+                "locality": "Markham",
+                "country": "CA",
+                "type": "work",
+                "streetAddress": "123 Main St.",
+                "postalCode": "L5T7Y8",
+                "primary": true,
+                "region": "ON"
+            }
+        ],
+        "urn:ietf:params:scim:schemas:extension:ibm:2.0:User": {
+            "userCategory": "regular",
+            "twoFactorAuthentication": false
+        },
+        "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User": {
+            "department": "Test Users",
+            "employeeNumber": "012345"
+        }
+   })
+- context: "usersUrl := 'https://' + ctx.__tenantid + '/v2.0/Users'"
+- context: &gt;-
+    result := hc.Post(context.usersUrl, {
+        "Authorization": "Bearer " + ctx.token,
+        "Content-Type": "application/scim+json"
+    }, context.payload)
+#- context: &gt;-
+#     result := { "resultOfPost": "result" }
+- context: &gt;-
+    resultJson := stringToJson(context.result.responseBody)
+- context: &gt;-
+    id := context.resultJson.id
+- context: &gt;-
+     debugObj4 := {
+         "debugMsg": "In create user",
+         "result": context.result,
+         "title": user.title,
+         "delegateid": context.id
+     }
+#- context: &gt;
+#    webhookRtn := hc.Post(ctx.webhookUrl, {"content-type": "application/json"}, jsonToString(context.debugObj4))
+- return: &gt; 
+    {
+        "debugObj4": context.debugObj4,
+        "delegateid": context.id,
+        "payload": context.payload
+    }  </isv:inputParameter><isv:outputParameter displayName="Script output" id="result" instruction="The response after executing the rule expression" name="result" order="2" type="String"/></isv:inputOutput></bpmn2:extensionElements><bpmn2:incoming>Flow_1pborjd</bpmn2:incoming><bpmn2:outgoing>Flow_0nexy8j</bpmn2:outgoing></bpmn2:serviceTask><bpmn2:sequenceFlow id="Flow_1pborjd" sourceRef="isv_function_1706460469707_customId" targetRef="isv_function_1713193159929_customId"/><bpmn2:serviceTask camunda:class="com.ibm.security.access.workflow.camunda.customTaskListener.CustomRuleTask" id="isv_function_1713200135973_customId" name="Add User to Group"><bpmn2:extensionElements><isv:inputOutput><isv:inputParameter displayName="Rule expression" id="inputData" instruction="Use functions and conditions to add or transform data" name="inputData" order="1" required="true" type="String">statements:
+#- context: &gt;-
+#   ctx:= {"id": "645000LR2R", "email": "jeff.smith002@yopmail.com", "fname": "Jeff", "lname": "Smith002", "token": "ydQAsz0XR3v1ewWG1rjlGOrKlBjaD24bi9AEoFMIn-4.ipkCYAekzyKG_ras7dyUJi3QCLmdq-J7AMGLZiT16BVBvTGWicRb52KSKze-zJ4ZMKZ_Tx5LO8Rn1S68b7XvjQ.M18xNzEzMjAwNjc3XzI1"  }
+- context: &gt;-
+    payload := jsonToString({
+    "Operations": [
+        {
+            "op": "add",
+            "path": "members",
+            "value": [
+                {
+                    "type": "user",
+                    "value": ctx.delegateid
+                }
+            ]
+        },
+        {
+            "op": "replace",
+            "path": "displayName",
+            "value": "DelegatedAdminUseCase"
+        },
+        {
+            "op": "add",
+            "path": "urn:ietf:params:scim:schemas:extension:ibm:2.0:Group:description",
+            "value": "Use case to showcase delegated administration"
+        },
+        {
+            "op": "add",
+            "path": "urn:ietf:params:scim:schemas:extension:ibm:2.0:Notification:notifyType",
+            "value": "NONE"
+        }
+    ],
+    "schemas": [
+        "urn:ietf:params:scim:api:messages:2.0:PatchOp"
+    ]
+    })
+- context: &gt;-
+     targetGroup := user.getCustomValue('delegatedadmingroup')
+#- context: &gt;-
+#    targetGroup := user.title
+- context: "groupUrl := 'https://' + ctx.__tenantid + '/v2.0/Groups/' + context.targetGroup"
+- context: &gt;-
+    result := hc.Patch(context.groupUrl, {
+        "Authorization": "Bearer " + ctx.token,
+        "Content-Type": "application/scim+json"
+    }, context.payload)
+- context: &gt;-
+     debugObj5 := {
+         "debugMsg": "In add group", 
+         "delegateid": ctx.delegateid,
+         "result": context.result
+     }
+#- context: &gt;
+#    webhookRtn := hc.Post(ctx.webhookUrl, {"content-type": "application/json"}, jsonToString(context.debugObj5))
+- return: &gt; 
+    {
+        "debugObj5": context.debugObj5
+    }  </isv:inputParameter><isv:outputParameter displayName="Script output" id="result" instruction="The response after executing the rule expression" name="result" order="2" type="String"/></isv:inputOutput></bpmn2:extensionElements><bpmn2:incoming>Flow_0nexy8j</bpmn2:incoming><bpmn2:outgoing>Flow_1pqhf47</bpmn2:outgoing></bpmn2:serviceTask><bpmn2:sequenceFlow id="Flow_0nexy8j" sourceRef="isv_function_1713193159929_customId" targetRef="isv_function_1713200135973_customId"/><bpmn2:sequenceFlow id="Flow_1pqhf47" sourceRef="isv_function_1713200135973_customId" targetRef="isv_redirect_1706391132486_customId"/></bpmn2:process><bpmn2:message id="Message_07h2y22" name="onLogin"/><bpmn2:message id="Message_0k721yy" name="onLogin"/><bpmn2:message id="Message_1cg7hcf" name="onUserInfo"/><bpmndi:BPMNDiagram id="BPMNDiagram_1"><bpmndi:BPMNPlane bpmnElement="delegated_admin_create_user" id="BPMNPlane_1"><bpmndi:BPMNShape bioc:stroke="#161616" bpmnElement="Event_0onayf9" color:border-color="#161616" id="Event_0onayf9_di"><dc:Bounds height="36" width="36" x="152" y="82"/></bpmndi:BPMNShape><bpmndi:BPMNShape bioc:stroke="#175ffe" bpmnElement="isv_function_1706386378613_customId" color:border-color="#175ffe" id="Activity_083x903_di"><dc:Bounds height="76" width="188" x="76" y="205"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape><bpmndi:BPMNShape bioc:stroke="#161616" bpmnElement="Event_0nxpekq_customId" color:border-color="#161616" id="Event_0nxpekq_di"><dc:Bounds height="40" width="126" x="387" y="2060"/></bpmndi:BPMNShape><bpmndi:BPMNShape bioc:stroke="#161616" bpmnElement="isv_redirect_1706390898330_customId" color:border-color="#161616" id="Activity_0c2dmtc_di"><dc:Bounds height="76" width="188" x="76" y="462"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape><bpmndi:BPMNShape bioc:stroke="#161616" bpmnElement="isv_redirect_1706391132486_customId" color:border-color="#161616" id="Activity_0hu6qcy_di"><dc:Bounds height="76" width="188" x="366" y="1902"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape><bpmndi:BPMNShape bioc:stroke="#161616" bpmnElement="Event_13603w1_customId" color:border-color="#161616" id="Event_13603w1_di"><dc:Bounds height="36" width="36" x="142" y="642"/><bpmndi:BPMNLabel color:color="#161616"><dc:Bounds height="16" width="48" x="84" y="652"/></bpmndi:BPMNLabel></bpmndi:BPMNShape><bpmndi:BPMNShape bioc:stroke="#161616" bpmnElement="isv_function_1706457381807_customId" color:border-color="#161616" id="Activity_0ce1lr9_di"><dc:Bounds height="76" width="188" x="366" y="782"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape><bpmndi:BPMNShape bioc:stroke="#161616" bpmnElement="isv_fetch_user_1706460251337_customId" color:border-color="#161616" id="Activity_136s3jt_di"><dc:Bounds height="76" width="188" x="366" y="945"/></bpmndi:BPMNShape><bpmndi:BPMNShape bioc:stroke="#161616" bpmnElement="isv_function_1706460469707_customId" color:border-color="#161616" id="Activity_05e6wf6_di"><dc:Bounds height="76" width="188" x="386" y="1362"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape><bpmndi:BPMNShape bioc:stroke="#161616" bpmnElement="Event_1355pfc_customId" color:border-color="#161616" id="Event_1355pfc_di"><dc:Bounds height="36" width="36" x="442" y="1212"/><bpmndi:BPMNLabel color:color="#161616"><dc:Bounds height="16" width="69" x="363" y="1222"/></bpmndi:BPMNLabel></bpmndi:BPMNShape><bpmndi:BPMNShape bioc:stroke="#161616" bpmnElement="isv_page_1713192545045_customId" color:border-color="#161616" id="Activity_0avjqho_di"><dc:Bounds height="76" width="188" x="365.5" y="1092"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape><bpmndi:BPMNShape bioc:stroke="#161616" bpmnElement="isv_function_1713193159929_customId" color:border-color="#161616" id="Activity_1egimjb_di"><dc:Bounds height="76" width="188" x="386" y="1522"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape><bpmndi:BPMNShape bioc:stroke="#161616" bpmnElement="isv_function_1713200135973_customId" color:border-color="#161616" id="Activity_053qxuk_di"><dc:Bounds height="76" width="188" x="386" y="1685"/><bpmndi:BPMNLabel/></bpmndi:BPMNShape><bpmndi:BPMNEdge bioc:stroke="#161616" bpmnElement="Flow_0jib2g4" color:border-color="#161616" id="Flow_0jib2g4_di"><di:waypoint x="170" y="120"/><di:waypoint x="170" y="205"/></bpmndi:BPMNEdge><bpmndi:BPMNEdge bioc:stroke="#161616" bpmnElement="Flow_1cou42b" color:border-color="#161616" id="Flow_1cou42b_di"><di:waypoint x="170" y="281"/><di:waypoint x="170" y="462"/></bpmndi:BPMNEdge><bpmndi:BPMNEdge bioc:stroke="#161616" bpmnElement="Flow_1f40ql7" color:border-color="#161616" id="Flow_1f40ql7_di"><di:waypoint x="170" y="538"/><di:waypoint x="170" y="590"/><di:waypoint x="160" y="590"/><di:waypoint x="160" y="642"/></bpmndi:BPMNEdge><bpmndi:BPMNEdge bioc:stroke="#161616" bpmnElement="Flow_1mod6rw" color:border-color="#161616" id="Flow_1mod6rw_di"><di:waypoint x="178" y="660"/><di:waypoint x="230" y="660"/><di:waypoint x="230" y="690"/><di:waypoint x="470" y="690"/><di:waypoint x="470" y="760"/><di:waypoint x="460" y="760"/><di:waypoint x="460" y="782"/></bpmndi:BPMNEdge><bpmndi:BPMNEdge bioc:stroke="#161616" bpmnElement="Flow_1we51kg" color:border-color="#161616" id="Flow_1we51kg_di"><di:waypoint x="460" y="858"/><di:waypoint x="460" y="945"/></bpmndi:BPMNEdge><bpmndi:BPMNEdge bioc:stroke="#161616" bpmnElement="Flow_0v4ovfv" color:border-color="#161616" id="Flow_0v4ovfv_di"><di:waypoint x="460" y="1248"/><di:waypoint x="460" y="1300"/><di:waypoint x="480" y="1300"/><di:waypoint x="480" y="1362"/></bpmndi:BPMNEdge><bpmndi:BPMNEdge bioc:stroke="#161616" bpmnElement="Flow_1eq7195" color:border-color="#161616" id="Flow_1eq7195_di"><di:waypoint x="460" y="1021"/><di:waypoint x="460" y="1092"/></bpmndi:BPMNEdge><bpmndi:BPMNEdge bioc:stroke="#161616" bpmnElement="Flow_0qrlqzn" color:border-color="#161616" id="Flow_0qrlqzn_di"><di:waypoint x="460" y="1168"/><di:waypoint x="460" y="1212"/></bpmndi:BPMNEdge><bpmndi:BPMNEdge bioc:stroke="#161616" bpmnElement="Flow_121dejc" color:border-color="#161616" id="Flow_121dejc_di"><di:waypoint x="460" y="1978"/><di:waypoint x="460" y="2020"/><di:waypoint x="450" y="2020"/><di:waypoint x="450" y="2060"/></bpmndi:BPMNEdge><bpmndi:BPMNEdge bioc:stroke="#161616" bpmnElement="Flow_1pborjd" color:border-color="#161616" id="Flow_1pborjd_di"><di:waypoint x="480" y="1438"/><di:waypoint x="480" y="1522"/></bpmndi:BPMNEdge><bpmndi:BPMNEdge bioc:stroke="#161616" bpmnElement="Flow_0nexy8j" color:border-color="#161616" id="Flow_0nexy8j_di"><di:waypoint x="480" y="1598"/><di:waypoint x="480" y="1685"/></bpmndi:BPMNEdge><bpmndi:BPMNEdge bioc:stroke="#161616" bpmnElement="Flow_1pqhf47" color:border-color="#161616" id="Flow_1pqhf47_di"><di:waypoint x="480" y="1761"/><di:waypoint x="480" y="1830"/><di:waypoint x="460" y="1830"/><di:waypoint x="460" y="1902"/></bpmndi:BPMNEdge></bpmndi:BPMNPlane></bpmndi:BPMNDiagram></bpmn2:definitions>
